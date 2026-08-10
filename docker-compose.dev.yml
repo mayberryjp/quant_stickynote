@@ -1,0 +1,58 @@
+# Docker Compose for Development
+# Usage: docker-compose -f docker-compose.dev.yml up -d
+# 
+# Includes:
+# - PostgreSQL database
+# - Quant Sticky Note service (with hot reload)
+
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: quant_stickynote_postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: quant_stickynote
+      POSTGRES_INITDB_ARGS: "--encoding=UTF-8 --locale=en_US.UTF-8"
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  app:
+    build: .
+    container_name: quant_stickynote_app
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/quant_stickynote
+      SERVICE_NAME: quant_stickynote
+      ENVIRONMENT: development
+      LOG_LEVEL: DEBUG
+      TRIGGER_TIME: "09:30"
+      CHECK_INTERVAL_SECONDS: 60
+      API_HOST: 0.0.0.0
+      API_PORT: 8080
+      API_WORKERS: 4
+      WORKER_ENABLED: "true"
+    ports:
+      - "8080:8080"
+    volumes:
+      - .:/app
+      - /app/.venv  # Don't volume mount venv
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: python -m quant_stickynote.main
+
+volumes:
+  postgres_data:
+
+networks:
+  default:
+    name: quant_stickynote_dev

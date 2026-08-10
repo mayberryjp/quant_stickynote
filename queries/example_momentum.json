@@ -1,0 +1,21 @@
+{
+  "id": "momentum_example",
+  "name": "Simple Momentum Detection",
+  "enabled": false,
+  "description": "Example query demonstrating signal extraction format. Disabled by default - enable and configure database for testing.",
+  "external_database": {
+    "url": "${DATA_WAREHOUSE_URL}"
+  },
+  "source_query": "SELECT symbol, momentum_score, price FROM technical_indicators WHERE momentum_score > 0.7 ORDER BY momentum_score DESC",
+  "signal_extraction": {
+    "symbol_column": "symbol",
+    "buy_price_column": "price",
+    "position_type_column": null,
+    "trigger_reason_template": "Momentum score > 0.7",
+    "filter_expression": "momentum_score > 0.8"
+  },
+  "dedup_key_ttl_hours": 24,
+  "max_results_per_run": 10,
+  "timeout_seconds": 30,
+  "notes": "This is an example query showing the expected JSON structure. Replace DATA_WAREHOUSE_URL in .env with actual database URL to enable."
+}

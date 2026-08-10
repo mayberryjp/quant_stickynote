@@ -1,0 +1,22 @@
+# Quant Sticky Note - Production Dependencies
+# Install with: pip install -r requirements.txt
+
+# Web Framework & Server
+bottle==0.12.25
+waitress==2.1.2
+
+# Database & ORM
+sqlalchemy==2.0.23
+psycopg[binary]==3.2.13
+alembic==1.12.1
+
+# Configuration & Settings
+pydantic-settings==2.1.0
+pydantic==2.5.0
+python-dotenv==1.0.0
+
+# Logging
+structlog==24.1.0
+
+# Utilities
+pytz==2024.1
