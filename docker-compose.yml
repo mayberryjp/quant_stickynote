@@ -1,9 +1,5 @@
-# Docker Compose for Development
-# Usage: docker-compose -f docker-compose.dev.yml up -d
-# 
-# Includes:
-# - PostgreSQL database
-# - Quant Sticky Note service (with hot reload)
+# Docker Compose for local service startup
+# Usage: docker-compose up -d
 
 version: '3.8'
 
@@ -32,8 +28,7 @@ services:
     environment:
       DATABASE_URL: postgresql://postgres:postgres@postgres:5432/quant_stickynote
       SERVICE_NAME: quant_stickynote
-      ENVIRONMENT: development
-      LOG_LEVEL: DEBUG
+      LOG_LEVEL: INFO
       TRIGGER_TIME: "09:30"
       CHECK_INTERVAL_SECONDS: 60
       API_HOST: 0.0.0.0
@@ -44,7 +39,7 @@ services:
       - "8080:8080"
     volumes:
       - .:/app
-      - /app/.venv  # Don't volume mount venv
+      - /app/.venv
     depends_on:
       postgres:
         condition: service_healthy
@@ -55,4 +50,4 @@ volumes:
 
 networks:
   default:
-    name: quant_stickynote_dev
+    name: quant_stickynote

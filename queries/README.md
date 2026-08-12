@@ -311,7 +311,7 @@ DATA_WAREHOUSE_URL=postgresql://user:pass@host:5432/db
 ```
 
 ### 4. Testing Queries
-Before enabling in production:
+Before enabling a query:
 
 ```bash
 # 1. Test the external database connection

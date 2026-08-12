@@ -40,13 +40,13 @@ A Python backend service for continuous stock trading signal discovery via confi
 3. **Install dependencies**
    ```bash
    pip install -r requirements.txt
-   pip install -r requirements-dev.txt  # for testing/dev
+  pip install -r requirements-dev.txt  # for tests and tooling
    ```
 
 4. **Set up local PostgreSQL**
    ```bash
    # Option 1: Using docker-compose
-   docker-compose -f docker-compose.dev.yml up -d
+  docker-compose up -d
    
    # Option 2: Manual PostgreSQL setup
    createdb quant_stickynote
@@ -107,8 +107,7 @@ quant_stickynote/
 │   ├── unit/
 │   └── integration/
 ├── Dockerfile
-├── docker-compose.dev.yml
-├── docker-compose.prod.yml
+├── docker-compose.yml
 ├── requirements.txt
 ├── requirements-dev.txt
 ├── setup.py
@@ -188,7 +187,6 @@ Set these before running the service. See `.env.example` for template.
 ```bash
 # Service Info
 SERVICE_NAME=quant_stickynote
-ENVIRONMENT=development|production
 LOG_LEVEL=DEBUG|INFO|WARNING|ERROR
 
 # Database (Local)
@@ -343,7 +341,7 @@ docker run -d \
 
 **With docker-compose**:
 ```bash
-docker-compose -f docker-compose.prod.yml up -d
+docker-compose up -d
 ```
 
 ### Supervisord
@@ -459,7 +457,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for development guidelines, code style, t
 See [SPEC.md](SPEC.md) for:
 - Detailed architecture diagrams
 - Complete database schema
-- Progressive development slices (MVP → Production)
+- Progressive implementation slices
 - Coding standards and best practices
 - Query definition JSON schema
 - Performance targets

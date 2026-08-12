@@ -1,4 +1,4 @@
-# Quant Sticky Note - Production Dependencies
+# Quant Sticky Note - Runtime Dependencies
 # Install with: pip install -r requirements.txt
 
 # Web Framework & Server

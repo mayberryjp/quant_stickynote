@@ -46,7 +46,7 @@ alembic upgrade head
 
 ### 3. Rollback Changes
 
-To undo migrations (careful in production!):
+To undo migrations, use care and confirm the target database first:
 
 ```bash
 # See current and available versions
@@ -234,9 +234,9 @@ SELECT * FROM alembic_version;
 SELECT column_name, data_type, is_nullable FROM information_schema.columns WHERE table_name='sticky_notes';
 ```
 
-## Production Considerations
+## Migration Safety Checklist
 
-1. **Backup Before Migration**: Always backup production database before running migrations
+1. **Backup Before Migration**: Always backup the target database before running migrations
    ```bash
    pg_dump postgresql://user:password@host:5432/db > backup.sql
    ```
@@ -247,7 +247,7 @@ SELECT column_name, data_type, is_nullable FROM information_schema.columns WHERE
    ```
 
 3. **Monitor Performance**: Large data migrations may lock tables
-   - Review migration duration on dev/staging first
+  - Review generated SQL before applying
    - Schedule during maintenance windows for large tables
 
 4. **Rollback Plan**: Keep downgrade SQL available

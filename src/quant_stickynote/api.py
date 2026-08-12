@@ -48,7 +48,6 @@ def create_app() -> Bottle:
     def set_json_headers():
         response.content_type = "application/json"
         response.add_header("X-Service", settings.service_name)
-        response.add_header("X-Environment", settings.environment)
 
     # ========================================================================
     # Health & Readiness Endpoints

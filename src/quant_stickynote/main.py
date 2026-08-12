@@ -159,8 +159,7 @@ def run_api_server() -> None:
             workers=settings.api_workers,
         )
 
-        # Waitress is production-ready WSGI server
-        # Replaces Bottle's development server
+        # Waitress provides the WSGI server used by this service.
         serve(
             app,
             host=settings.api_host,

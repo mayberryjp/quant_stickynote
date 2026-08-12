@@ -1,7 +1,7 @@
-# Quant Sticky Note - Development Dependencies
+# Quant Sticky Note - Test and Tooling Dependencies
 # Install with: pip install -r requirements-dev.txt
 # 
-# This includes all production dependencies plus development tools
+# This includes runtime dependencies plus test and tooling packages
 
 -r requirements.txt
 

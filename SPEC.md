@@ -196,7 +196,6 @@ CREATE TABLE alembic_version (
 ```
 # Service
 SERVICE_NAME=quant_stickynote
-ENVIRONMENT=production|development|test
 LOG_LEVEL=DEBUG|INFO|WARNING|ERROR
 LOG_FORMAT=json|text
 
@@ -527,7 +526,7 @@ Each slice is a self-contained, deliverable milestone. Subsequent slices depend 
 ---
 
 ### **SLICE 6: Deployment & DevOps** ⏱️ ~2 days
-**Objective**: Package for production deployment
+**Objective**: Package the service for repeatable deployment
 
 **Tasks**:
 - [ ] Create Dockerfile
@@ -535,7 +534,7 @@ Each slice is a self-contained, deliverable milestone. Subsequent slices depend 
   - Minimal final image (python:3.12-slim)
   - Non-root user execution
   - Health check defined
-- [ ] Create docker-compose.yml (local dev)
+- [ ] Create docker-compose.yml
   - PostgreSQL service
   - quant_stickynote service
   - Volume mounts for code and queries
@@ -556,11 +555,10 @@ Each slice is a self-contained, deliverable milestone. Subsequent slices depend 
   - supervisord startup
   - Monitoring and log aggregation setup
 - [ ] Create migration runbook
-  - How to run Alembic migrations in production
+  - How to run Alembic migrations before service startup
   - Rollback procedure
   - Zero-downtime deployment strategy
 - [ ] Setup configuration management
-  - Environment-specific configs
   - Secrets management (avoid hardcoding)
 
 **Acceptance Criteria**:
@@ -568,7 +566,7 @@ Each slice is a self-contained, deliverable milestone. Subsequent slices depend 
 - Service runs in Docker with database
 - CI/CD pipeline passes all stages
 - Deployment documentation is complete
-- Can be deployed to production with confidence
+- Can be deployed repeatably with confidence
 
 **Dependencies**: SLICE 1-5 (all prior slices)
 
@@ -761,7 +759,7 @@ Each slice is a self-contained, deliverable milestone. Subsequent slices depend 
 6. Structured logging is operational (SLICE 5)
 7. Deployed and running via Docker + supervisord (SLICE 6)
 
-✅ **Production Ready** when:
+✅ **Deployment Ready** when:
 - All SLICE 1-6 complete
 - Test coverage >80%
 - Documentation complete

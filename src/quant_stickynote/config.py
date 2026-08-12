@@ -25,11 +25,10 @@ class Settings(BaseSettings):
     """Configuration settings for quant_stickynote service.
     
     All settings read from environment variables. Supports .env file
-    for local development (python-dotenv reads .env automatically).
+    for local overrides (python-dotenv reads .env automatically).
     
     Attributes:
         service_name: Service identifier for logging
-        environment: Deployment environment (development, staging, production)
         log_level: Logging level (DEBUG, INFO, WARNING, ERROR, CRITICAL)
         
         database_url: PostgreSQL connection string for sticky notes storage
@@ -51,14 +50,10 @@ class Settings(BaseSettings):
         options_analysis_url: Optional external database for options data
         historical_data_url: Optional external database for price history
         insider_data_url: Optional external database for insider data
-        
-        debug: Enable debug mode (development only)
-        reload_on_changes: Reload code on file changes (development only)
     """
 
     # Service Configuration
     service_name: str = "quant_stickynote"
-    environment: str = "development"
     log_level: str = "INFO"
 
     # Database Configuration
@@ -85,10 +80,6 @@ class Settings(BaseSettings):
     options_analysis_url: Optional[str] = None
     historical_data_url: Optional[str] = None
     insider_data_url: Optional[str] = None
-
-    # Development Configuration
-    debug: bool = False
-    reload_on_changes: bool = False
 
     class Config:
         """Pydantic configuration for BaseSettings."""
@@ -124,16 +115,6 @@ class Settings(BaseSettings):
             raise ValueError(
                 f"Failed to parse trigger_time '{self.trigger_time}': {e}"
             ) from e
-
-    @property
-    def is_production(self) -> bool:
-        """Check if running in production environment."""
-        return self.environment.lower() == "production"
-
-    @property
-    def is_development(self) -> bool:
-        """Check if running in development environment."""
-        return self.environment.lower() == "development"
 
     def get_external_database_url(self, source_name: str) -> Optional[str]:
         """Get external database URL by source name.

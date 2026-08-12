@@ -26,7 +26,7 @@ pip install -r requirements-dev.txt
 
 # Set up PostgreSQL (choose one option)
 # Option A: Docker
-docker-compose -f docker-compose.dev.yml up -d
+docker-compose up -d
 
 # Option B: Manual PostgreSQL
 createdb quant_stickynote

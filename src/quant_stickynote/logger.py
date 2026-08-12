@@ -142,7 +142,7 @@ def get_logger(name: str) -> StructuredLogger:
 
     Example:
         log = get_logger(__name__)
-        log.info("startup", version="1.0", environment=settings.environment)
+        log.info("startup", version="1.0", service=settings.service_name)
     """
     logger = logging.getLogger(name)
 
@@ -170,7 +170,6 @@ def log_startup(version: str = "1.0.0") -> None:
     root_logger.info(
         "Service startup",
         version=version,
-        environment=settings.environment,
         service=settings.service_name,
         log_level=settings.log_level,
         worker_enabled=settings.worker_enabled,
