@@ -48,6 +48,18 @@ def create_app() -> Bottle:
     def set_json_headers():
         response.content_type = "application/json"
         response.add_header("X-Service", settings.service_name)
+        response.add_header("Access-Control-Allow-Origin", "*")
+        response.add_header(
+            "Access-Control-Allow-Methods",
+            "GET, POST, PUT, PATCH, DELETE, OPTIONS",
+        )
+        response.add_header("Access-Control-Allow-Headers", "Content-Type, Authorization")
+
+    @app.route("/<path:path>", method="OPTIONS")
+    def cors_preflight(path: str):
+        """Handle browser CORS preflight requests."""
+        response.status = 204
+        return ""
 
     # ========================================================================
     # Health & Readiness Endpoints
