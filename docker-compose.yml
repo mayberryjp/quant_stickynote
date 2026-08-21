@@ -1,33 +1,15 @@
-# Docker Compose for local service startup
+# Docker Compose for app-only startup
 # Usage: docker-compose up -d
 
 version: '3.8'
 
 services:
-  postgres:
-    image: postgres:16-alpine
-    container_name: quant_stickynote_postgres
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: quant_stickynote
-      POSTGRES_INITDB_ARGS: "--encoding=UTF-8 --locale=en_US.UTF-8"
-    ports:
-      - "5432:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
   app:
-    build: .
+    image: quant-sticky-note:latest
     container_name: quant_stickynote_app
     environment:
-      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/quant_stickynote
       SERVICE_NAME: quant_stickynote
+      ENVIRONMENT: development
       LOG_LEVEL: INFO
       TRIGGER_TIME: "09:30"
       CHECK_INTERVAL_SECONDS: 60
@@ -35,19 +17,9 @@ services:
       API_PORT: 8080
       API_WORKERS: 4
       WORKER_ENABLED: "true"
+      WORKER_LOG_EVERY_N_CYCLES: 10
+      DEBUG: "false"
+      RELOAD_ON_CHANGES: "false"
     ports:
       - "8080:8080"
-    volumes:
-      - .:/app
-      - /app/.venv
-    depends_on:
-      postgres:
-        condition: service_healthy
     command: python -m quant_stickynote.main
-
-volumes:
-  postgres_data:
-
-networks:
-  default:
-    name: quant_stickynote

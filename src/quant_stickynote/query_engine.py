@@ -1,37 +1,24 @@
 """Query engine for loading and executing signal detection queries.
 
 Loads JSON query definitions from queries/ directory and executes them
-against external databases. Handles:
-- Query definition validation
-- External database connection management
-- Query execution with timeout
-- Result parsing and signal extraction
-- Position type detection (LONG/SHORT)
-- Filter expression evaluation
+against external databases.
 
 Query Definition Structure:
 {
   "id": "unique_id",
   "name": "Human readable name",
   "enabled": true/false,
-  "external_database": {"url": "postgresql://..."},
-  "source_query": "SELECT ...",
+  "symbol_query": "SELECT symbol FROM ...",
+  "price_query": "SELECT symbol, price FROM ... WHERE symbol = :symbol",
   "signal_extraction": {
-    "symbol_column": "column_name",
-    "buy_price_column": "column_name",
-    "position_type_column": "column_name",  # Optional, defaults to 'LONG'
-    "trigger_reason_template": "text",
-    "filter_expression": "python_filter"
+    "symbol_column": "symbol",
+    "buy_price_column": "price"
   },
   "dedup_key_ttl_hours": 24,
-  "max_results_per_run": 100,
   "timeout_seconds": 300
 }
 """
 import json
-import os
-import re
-from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
@@ -55,11 +42,10 @@ class QueryDefinition:
         id: Unique query identifier
         name: Human readable name
         enabled: Whether query is enabled
-        external_database: Database connection config
-        source_query: SQL query to execute
+        symbol_query: SQL query to get candidate symbols
+        price_query: SQL query to get price for each symbol
         signal_extraction: How to parse results
         dedup_key_ttl_hours: Dedup TTL
-        max_results_per_run: Max signals per run
         timeout_seconds: Query timeout
     """
 
@@ -75,11 +61,10 @@ class QueryDefinition:
         self.id = definition.get("id")
         self.name = definition.get("name")
         self.enabled = definition.get("enabled", True)
-        self.external_database = definition.get("external_database", {})
-        self.source_query = definition.get("source_query")
+        self.symbol_query = definition.get("symbol_query")
+        self.price_query = definition.get("price_query")
         self.signal_extraction = definition.get("signal_extraction", {})
         self.dedup_key_ttl_hours = definition.get("dedup_key_ttl_hours", 24)
-        self.max_results_per_run = definition.get("max_results_per_run", 0)
         self.timeout_seconds = definition.get("timeout_seconds", 300)
 
         self._validate()
@@ -94,44 +79,16 @@ class QueryDefinition:
             raise ValueError("Query definition missing 'id' field")
         if not self.name:
             raise ValueError(f"Query {self.id} missing 'name' field")
-        if not self.source_query:
-            raise ValueError(f"Query {self.id} missing 'source_query' field")
-        if not self.external_database.get("url"):
-            raise ValueError(f"Query {self.id} missing external_database.url")
+        if not self.symbol_query:
+            raise ValueError(f"Query {self.id} missing 'symbol_query' field")
+        if not self.price_query:
+            raise ValueError(f"Query {self.id} missing 'price_query' field")
 
         signal_ext = self.signal_extraction
         if not signal_ext.get("symbol_column"):
             raise ValueError(f"Query {self.id} missing signal_extraction.symbol_column")
         if not signal_ext.get("buy_price_column"):
             raise ValueError(f"Query {self.id} missing signal_extraction.buy_price_column")
-
-    def get_database_url(self) -> str:
-        """Get resolved database URL with environment variables substituted.
-        
-        Returns:
-            Database URL with ${VAR} patterns replaced
-            
-        Raises:
-            ValueError: If environment variable not found
-        """
-        url = self.external_database.get("url", "")
-
-        # Replace ${VAR} patterns with environment variable values
-        def replace_env_var(match):
-            var_name = match.group(1)
-            value = os.environ.get(var_name)
-            if value is None:
-                raise ValueError(
-                    f"Environment variable ${{{var_name}}} not found for query {self.id}"
-                )
-            return value
-
-        try:
-            resolved_url = re.sub(r"\$\{([^}]+)\}", replace_env_var, url)
-            return resolved_url
-        except ValueError as e:
-            log.error("Failed to resolve database URL", query_id=self.id, error=str(e))
-            raise
 
     def get_symbol_column(self) -> str:
         """Get column name for stock symbol."""
@@ -141,21 +98,9 @@ class QueryDefinition:
         """Get column name for buy price."""
         return self.signal_extraction.get("buy_price_column", "price")
 
-    def get_position_type_column(self) -> Optional[str]:
-        """Get column name for position type (LONG/SHORT).
-        
-        Returns:
-            Column name or None if not specified
-        """
-        return self.signal_extraction.get("position_type_column")
-
     def get_trigger_reason_template(self) -> str:
         """Get trigger reason template or default to query name."""
-        return self.signal_extraction.get("trigger_reason_template", self.name)
-
-    def get_filter_expression(self) -> Optional[str]:
-        """Get Python filter expression for result filtering."""
-        return self.signal_extraction.get("filter_expression")
+        return self.name
 
 
 class QueryEngine:
@@ -221,7 +166,7 @@ class QueryEngine:
     def execute_query(
         self, query: QueryDefinition
     ) -> Tuple[List[Dict[str, Any]], Optional[str]]:
-        """Execute a query definition and extract signals.
+        """Execute a symbol query and a separate price query, then extract signals.
         
         Args:
             query: QueryDefinition to execute
@@ -236,8 +181,8 @@ class QueryEngine:
             never raises exceptions (logs and continues)
         """
         try:
-            # Resolve database URL
-            db_url = query.get_database_url()
+            # Get database URL from settings (environment)
+            db_url = settings.DATABASE_URL
 
             # Rewrite dialect for psycopg3 if needed
             if db_url.startswith("postgresql://") or db_url.startswith("postgres://"):
@@ -249,13 +194,26 @@ class QueryEngine:
                 poolclass=NullPool,
             )
 
-            # Execute query
             with engine.connect() as connection:
-                result = connection.execute(text(query.source_query))
-                rows = result.fetchall()
+                symbol_rows = connection.execute(text(query.symbol_query)).fetchall()
+                signals = []
 
-            # Parse results and extract signals
-            signals = self._extract_signals(query, rows)
+                for symbol_row in symbol_rows:
+                    row_dict = dict(symbol_row._mapping) if hasattr(symbol_row, "_mapping") else dict(symbol_row)
+                    symbol = row_dict.get(query.get_symbol_column())
+                    if symbol is None:
+                        continue
+
+                    price_rows = connection.execute(
+                        text(query.price_query),
+                        {"symbol": str(symbol)},
+                    ).fetchall()
+
+                    for price_row in price_rows:
+                        price_dict = dict(price_row._mapping) if hasattr(price_row, "_mapping") else dict(price_row)
+                        signal = self._extract_signal(query, price_dict)
+                        if signal is not None:
+                            signals.append(signal)
 
             return signals, None
 
@@ -279,98 +237,33 @@ class QueryEngine:
             )
             return [], error_msg
 
-    def _extract_signals(
-        self, query: QueryDefinition, rows: List[Tuple]
-    ) -> List[Dict[str, Any]]:
-        """Extract signals from query results.
-        
-        Args:
-            query: QueryDefinition with extraction rules
-            rows: Query result rows
-            
-        Returns:
-            List of signal dictionaries with keys:
-            - symbol: Stock ticker
-            - buy_price: Entry price
-            - position_type: LONG or SHORT
-            - trigger_reason: Why signal triggered
-        """
-        signals = []
+    def _extract_signal(
+        self, query: QueryDefinition, row_dict: Dict[str, Any]
+    ) -> Optional[Dict[str, Any]]:
+        """Extract a single signal from a price-row dictionary."""
+        try:
+            symbol = row_dict.get(query.get_symbol_column())
+            buy_price = row_dict.get(query.get_buy_price_column())
 
-        for row in rows:
-            try:
-                # Convert row to dict
-                row_dict = dict(row._mapping) if hasattr(row, "_mapping") else dict(row)
+            if not symbol or buy_price is None:
+                return None
 
-                # Extract required fields
-                symbol = row_dict.get(query.get_symbol_column())
-                buy_price = row_dict.get(query.get_buy_price_column())
+            position_type = "LONG"
 
-                if not symbol or buy_price is None:
-                    continue
-
-                # Extract position type
-                position_type_col = query.get_position_type_column()
-                if position_type_col:
-                    position_type = row_dict.get(position_type_col, "LONG")
-                    # Validate and normalize
-                    position_type = str(position_type).upper()
-                    if position_type not in ("LONG", "SHORT"):
-                        log.warning(
-                            "Invalid position_type",
-                            symbol=symbol,
-                            position_type=position_type,
-                            query_id=query.id,
-                        )
-                        position_type = "LONG"
-                else:
-                    position_type = "LONG"
-
-                # Apply filter expression if present
-                filter_expr = query.get_filter_expression()
-                if filter_expr:
-                    # Evaluate filter as Python expression with row data as context
-                    try:
-                        if not eval(filter_expr, {"__builtins__": {}}, row_dict):
-                            continue
-                    except Exception as e:
-                        log.warning(
-                            "Filter expression evaluation failed",
-                            query_id=query.id,
-                            symbol=symbol,
-                            error=str(e),
-                        )
-                        # Continue without filtering if expression fails
-
-                # Build signal
-                signal = {
-                    "symbol": str(symbol),
-                    "buy_price": float(buy_price),
-                    "position_type": position_type,
-                    "trigger_reason": query.get_trigger_reason_template(),
-                    "source_query_id": query.id,
-                }
-
-                signals.append(signal)
-
-                # Check max results
-                if query.max_results_per_run > 0 and len(signals) >= query.max_results_per_run:
-                    log.info(
-                        "Max results reached",
-                        query_id=query.id,
-                        max=query.max_results_per_run,
-                    )
-                    break
-
-            except Exception as e:
-                log.warning(
-                    "Error extracting signal from row",
-                    query_id=query.id,
-                    error=str(e),
-                )
-                continue
-
-        return signals
+            return {
+                "symbol": str(symbol),
+                "buy_price": float(buy_price),
+                "position_type": position_type,
+                "trigger_reason": query.get_trigger_reason_template(),
+                "source_query_id": query.id,
+            }
+        except Exception as e:
+            log.warning(
+                "Error extracting signal from row",
+                query_id=query.id,
+                error=str(e),
+            )
+            return None
 
 
 # Global query engine instance

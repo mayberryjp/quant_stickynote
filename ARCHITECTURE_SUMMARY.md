@@ -19,7 +19,7 @@ The quantitative trading stack consists of three interconnected services:
 
 ### Key Components
 - **db.py**: Database engine factory with connection pooling
-  - `get_database_url()` - resolves from config/environment
+
   - `get_engine()` - SQLAlchemy engine with pool_pre_ping=True
   - `make_alembic_config()` - builds migration configuration
   - `upgrade()` - applies migrations to head
