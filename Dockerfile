@@ -1,19 +1,25 @@
 FROM python:3.12-slim
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONUNBUFFERED=1 \
-    PIP_NO_CACHE_DIR=1
+    PYTHONUNBUFFERED=1
 
 WORKDIR /app
 
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends bash ca-certificates git vim procps tzdata \
-    && rm -rf /var/lib/apt/lists/*
+ && apt-get install -y --no-install-recommends supervisor curl \
+ && rm -rf /var/lib/apt/lists/*
 
-COPY . .
+COPY pyproject.toml README.md ./
+COPY src ./src
+COPY alembic ./alembic
+COPY alembic.ini supervisord.conf ./
 
-RUN python3 -m pip install --upgrade pip \
-    && python3 -m pip install -e ".[dev]" \
-    && python3 -m pip install supervisor
+RUN pip install --no-cache-dir --upgrade pip \
+ && pip install --no-cache-dir .
 
-CMD ["supervisord", "-c", "/app/supervisord.conf"]
+RUN useradd -m appuser
+USER appuser
+
+EXPOSE 8000
+
+CMD ["supervisord", "-c", "/app/supervisord.conf", "-n"]

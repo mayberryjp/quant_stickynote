@@ -230,3 +230,15 @@ def get_worker() -> Worker:
     if _worker_instance is None:
         _worker_instance = Worker()
     return _worker_instance
+
+def main() -> None:
+    """Main entry point for worker daemon.
+    
+    Called by supervisord or direct invocation.
+    """
+    worker = get_worker()
+    worker.run()
+
+
+if __name__ == "__main__":
+    main()

@@ -1,25 +1,14 @@
-# Docker Compose for app-only startup
-# Usage: docker-compose up -d
-
-version: '3.8'
+version: "3.8"
 
 services:
   app:
-    image: quant-sticky-note:latest
-    container_name: quant_stickynote_app
+    build: .
     environment:
-      SERVICE_NAME: quant_stickynote
-      ENVIRONMENT: development
-      LOG_LEVEL: INFO
-      TRIGGER_TIME: "09:30"
-      CHECK_INTERVAL_SECONDS: 60
-      API_HOST: 0.0.0.0
-      API_PORT: 8080
-      API_WORKERS: 4
-      WORKER_ENABLED: "true"
-      WORKER_LOG_EVERY_N_CYCLES: 10
-      DEBUG: "false"
-      RELOAD_ON_CHANGES: "false"
+      DATABASE_URL: "${DATABASE_URL}"
+      TRIGGER_TIME: "${TRIGGER_TIME:-09:30}"
+      CHECK_INTERVAL_SECONDS: "${CHECK_INTERVAL_SECONDS:-60}"
+      LOG_LEVEL: "${LOG_LEVEL:-INFO}"
+    expose:
+      - "8000"
     ports:
-      - "8080:8080"
-    command: python -m quant_stickynote.main
+      - "8000:8000"

@@ -342,49 +342,59 @@ docker run -d \
 **With docker-compose**:
 ```bash
 docker-compose up -d
-```
+## Quick Start
 
-### Supervisord
-
-Install supervisord:
-```bash
-pip install supervisor
-```
-
-Copy config:
-```bash
-sudo cp supervisord/supervisord.conf /etc/supervisor/
-sudo cp supervisord/conf.d/quant_stickynote.conf /etc/supervisor/conf.d/
-```
-
-Start:
-```bash
-sudo supervisorctl reread
-sudo supervisorctl update
-sudo supervisorctl start quant_stickynote
-```
-
-Check status:
-```bash
-sudo supervisorctl status
-sudo tail -f /var/log/quant_stickynote.log
-```
-
-## Monitoring & Troubleshooting
-
-### Logs
-All logs are structured JSON for easy parsing.
-
+### Prerequisites
+- Python 3.12+
+- PostgreSQL 13+ or external data warehouse
+- Docker (for containerized deployment)
+- Git
 Example:
+### Development Setup
 ```json
+1. **Create virtual environment**
+  ```bash
+  python -m venv venv
+  source venv/bin/activate  # or `venv\Scripts\activate` on Windows
+  ```
 {
+2. **Install dependencies**
+  ```bash
+  pip install -r requirements.txt
+  pip install -r requirements-dev.txt  # for tests and tooling
+  ```
   "timestamp": "2026-08-10T09:30:15.123Z",
+### Production Deployment
   "level": "INFO",
+**See [DEPLOYMENT.md](DEPLOYMENT.md) for complete deployment guide** including:
+- Docker image build process
+- Environment variable configuration
+- Supervisord setup and monitoring
+- Database migration with alembic
+- Troubleshooting and scaling
   "service": "quant_stickynote",
+**Quick start for deployment:**
   "message": "Query executed successfully",
+1. **Copy environment template**
+  ```bash
+  cp .env.example .env
+  # Edit .env and set DATABASE_URL to your external data warehouse
+  ```
   "query_id": "momentum_001",
+2. **Build Docker image**
+  ```bash
+  docker build -t quant-sticky-note:latest .
+  ```
   "signals_extracted": 5,
+3. **Start application**
+  ```bash
+  docker-compose up -d
+  ```
   "duration_ms": 250
+4. **Monitor logs**
+  ```bash
+  docker-compose logs -f app
+  ```
 }
 ```
 
