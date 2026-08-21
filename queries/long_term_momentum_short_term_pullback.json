@@ -3,7 +3,7 @@
   "name": "Long Term Momentum Short Term Pullback",
   "enabled": true,
   "symbol_query": "SELECT d.ticker FROM momentum.daily_momentum d JOIN signal_cache.signal_archive sa ON UPPER(COALESCE(sa.canonical_ticker, sa.submitted_ticker)) = UPPER(d.ticker) WHERE d.is_momentum_5d = false AND d.is_momentum_15d = true AND d.is_momentum_30d = true AND d.bar_date > CURRENT_DATE - INTERVAL '3 day' AND sa.created_at > CURRENT_DATE - INTERVAL '5 day' GROUP BY d.ticker",
-  "price_query": "SELECT value FROM indicators.indicator_values iv WHERE iv.ticker = :symbol AND indicator_code = 'wma_20'",
+  "price_query": "SELECT value FROM indicators.indicator_values iv WHERE iv.ticker = :symbol AND indicator_code = 'sma_50'",
   "signal_extraction": {
     "symbol_column": "ticker",
     "buy_price_column": "value"
