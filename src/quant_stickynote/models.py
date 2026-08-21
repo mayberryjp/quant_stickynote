@@ -6,6 +6,7 @@ from sqlalchemy import (
     BigInteger,
     CheckConstraint,
     Column,
+    Date,
     DateTime,
     Index,
     Integer,
@@ -56,6 +57,7 @@ class StickyNote(Base):
         buy_price: Recommended entry price (NUMERIC 10,4)
         position_type: Direction of trade - 'LONG' (buy/bull) or 'SHORT' (sell/bear)
         created_at: UTC timestamp when signal was generated
+        signal_date: UTC calendar date (yyyy-mm-dd) the signal was generated
         source_query_id: Reference to the query definition that produced this signal
         status: Lifecycle state (active, reviewed, cancelled, executed)
         notes: Optional manual notes from trader
@@ -74,6 +76,7 @@ class StickyNote(Base):
         Index("idx_sticky_notes_created_at", "created_at"),
         Index("idx_sticky_notes_status", "status"),
         Index("idx_sticky_notes_position_type", "position_type"),
+        Index("idx_sticky_notes_signal_date", "signal_date"),
     )
 
     id = Column(BigInteger, primary_key=True, autoincrement=True)
@@ -93,6 +96,13 @@ class StickyNote(Base):
         default=lambda: datetime.now(timezone.utc),
         server_default=func.now(),
         doc="UTC timestamp when signal was discovered"
+    )
+    signal_date = Column(
+        Date,
+        nullable=False,
+        default=lambda: datetime.now(timezone.utc).date(),
+        server_default=func.current_date(),
+        doc="UTC calendar date (yyyy-mm-dd) when signal was discovered"
     )
     source_query_id = Column(String(50), nullable=False, doc="Reference to triggering query definition")
     status = Column(
@@ -129,6 +139,7 @@ class StickyNote(Base):
             "buy_price": float(self.buy_price) if self.buy_price else None,
             "position_type": self.position_type,
             "created_at": self.created_at.isoformat() if self.created_at else None,
+            "signal_date": self.signal_date.isoformat() if self.signal_date else None,
             "source_query_id": self.source_query_id,
             "status": self.status,
             "notes": self.notes,
