@@ -22,10 +22,11 @@ if database_url:
     config.set_main_option("sqlalchemy.url", database_url)
 
 # Model metadata object (from models.py)
-# When ready to use, import your models here
-# from quant_stickynote import models
-# target_metadata = models.Base.metadata
-target_metadata = None  # Placeholder for now
+from quant_stickynote.models import Base
+target_metadata = Base.metadata
+
+# Distinct version table so this service can share a database with other Alembic-managed services
+VERSION_TABLE = "quant_stickynote_alembic_version"
 
 
 def run_migrations_offline() -> None:
@@ -46,6 +47,7 @@ def run_migrations_offline() -> None:
         target_metadata=target_metadata,
         literal_binds=True,
         dialect_opts={"paramstyle": "named"},
+        version_table=VERSION_TABLE,
     )
 
     with context.begin_transaction():
@@ -66,7 +68,11 @@ def run_migrations_online() -> None:
     )
 
     with connectable.connect() as connection:
-        context.configure(connection=connection, target_metadata=target_metadata)
+        context.configure(
+            connection=connection,
+            target_metadata=target_metadata,
+            version_table=VERSION_TABLE,
+        )
 
         with context.begin_transaction():
             context.run_migrations()
