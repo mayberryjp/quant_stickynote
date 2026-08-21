@@ -180,6 +180,9 @@ class QueryEngine:
             Returns empty list + error message on failure,
             never raises exceptions (logs and continues)
         """
+        if query is None:
+            return [], "Query not found"
+
         try:
             # Get database URL from settings (environment)
             db_url = settings.database_url
@@ -211,7 +214,7 @@ class QueryEngine:
 
                     for price_row in price_rows:
                         price_dict = dict(price_row._mapping) if hasattr(price_row, "_mapping") else dict(price_row)
-                        signal = self._extract_signal(query, price_dict)
+                        signal = self._extract_signal(query, symbol, price_dict)
                         if signal is not None:
                             signals.append(signal)
 
@@ -238,11 +241,10 @@ class QueryEngine:
             return [], error_msg
 
     def _extract_signal(
-        self, query: QueryDefinition, row_dict: Dict[str, Any]
+        self, query: QueryDefinition, symbol: Any, row_dict: Dict[str, Any]
     ) -> Optional[Dict[str, Any]]:
-        """Extract a single signal from a price-row dictionary."""
+        """Extract a signal from a price row for a symbol resolved by the symbol query."""
         try:
-            symbol = row_dict.get(query.get_symbol_column())
             buy_price = row_dict.get(query.get_buy_price_column())
 
             if not symbol or buy_price is None:
