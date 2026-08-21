@@ -26,8 +26,8 @@ from typing import Generator
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import Session, sessionmaker
 
-from config import settings
-from models import Base
+from .config import settings
+from .models import Base
 
 
 def _make_db_url(url: str) -> str:
@@ -43,7 +43,7 @@ engine = create_engine(
     pool_size=settings.database_pool_size,
     pool_recycle=settings.database_pool_recycle_seconds,
     pool_pre_ping=settings.database_pool_pre_ping,
-    echo=settings.debug,
+    echo=(settings.log_level.upper() == "DEBUG"),
 )
 
 # Session factory

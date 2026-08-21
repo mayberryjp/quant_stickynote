@@ -43,12 +43,12 @@ from typing import Optional
 
 from waitress import serve
 
-from api import get_app
-from config import settings
-from database import init_db
-from exceptions import QuoteStickyNoteError
-from logger import get_logger, log_startup, log_shutdown
-from worker import get_worker
+from .api import get_app
+from .config import settings
+from .database import init_db
+from .exceptions import QuoteStickyNoteError
+from .logger import get_logger, log_startup, log_shutdown
+from .worker import get_worker
 
 log = get_logger(__name__)
 
@@ -120,9 +120,11 @@ def validate_configuration(api_mode: bool = True, worker_mode: bool = True) -> N
     """
     try:
         if api_mode:
-            settings.validate_for_api()
+            # API host/port already type-validated by pydantic; nothing extra to check
+            pass
         if worker_mode:
-            settings.validate_for_worker()
+            # Accessing the property validates trigger_time format (raises ValueError)
+            _ = settings.trigger_time_parsed
     except ValueError as e:
         log.error("Configuration validation failed", error=str(e))
         raise
@@ -207,7 +209,6 @@ def main() -> int:
 
     # Apply debug mode if requested
     if args.debug:
-        settings.debug = True
         settings.log_level = "DEBUG"
 
     # Determine which modes to run

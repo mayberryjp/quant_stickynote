@@ -26,10 +26,10 @@ import time
 from datetime import datetime, timezone
 from typing import Optional
 
-from config import settings
-from logger import get_logger, log_query_execution
-from query_engine import get_query_engine
-from signal_processor import SignalProcessor
+from .config import settings
+from .logger import get_logger, log_query_execution
+from .query_engine import get_query_engine
+from .signal_processor import SignalProcessor
 
 log = get_logger(__name__)
 

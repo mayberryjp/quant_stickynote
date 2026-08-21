@@ -19,15 +19,15 @@ from typing import List, Optional, Tuple
 from sqlalchemy import and_, func
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 
-from database import get_db_session
-from exceptions import (
+from .database import get_db_session
+from .exceptions import (
     DuplicateSignalError,
     DatabaseError,
     SignalExtractionError,
     ValidationError,
 )
-from logger import get_logger
-from models import QueryExecution, StickyNote
+from .logger import get_logger
+from .models import QueryExecution, StickyNote
 
 log = get_logger(__name__)
 

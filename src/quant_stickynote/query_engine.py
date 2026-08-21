@@ -26,8 +26,8 @@ from sqlalchemy import create_engine, text
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.pool import NullPool
 
-from config import settings
-from logger import get_logger
+from .config import settings
+from .logger import get_logger
 
 log = get_logger(__name__)
 
@@ -182,7 +182,7 @@ class QueryEngine:
         """
         try:
             # Get database URL from settings (environment)
-            db_url = settings.DATABASE_URL
+            db_url = settings.database_url
 
             # Rewrite dialect for psycopg3 if needed
             if db_url.startswith("postgresql://") or db_url.startswith("postgres://"):
