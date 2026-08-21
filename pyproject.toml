@@ -1,0 +1,50 @@
+[build-system]
+requires = ["setuptools>=69", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "quant_stickynote"
+version = "0.1.0"
+description = "Backend service for continuous stock trading signal discovery"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "bottle==0.12.25",
+    "waitress==2.1.2",
+    "SQLAlchemy==2.0.23",
+    "psycopg[binary]==3.2.13",
+    "alembic==1.12.1",
+    "pydantic-settings==2.1.0",
+    "pydantic==2.5.0",
+    "python-dotenv==1.0.0",
+    "structlog==24.1.0",
+    "pytz==2024.1",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest==7.4.3",
+    "pytest-cov==4.1.0",
+    "pytest-watch==4.2.0",
+    "pytest-mock==3.12.0",
+    "black==23.12.0",
+    "flake8==6.1.0",
+    "isort==5.13.2",
+    "mypy==1.7.1",
+    "bandit==1.7.5",
+]
+
+[project.scripts]
+quant-stickynote = "quant_stickynote.main:cli"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+addopts = "-q"
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
