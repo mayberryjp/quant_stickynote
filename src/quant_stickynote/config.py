@@ -66,6 +66,9 @@ class Settings(BaseSettings):
     trigger_time: str = "09:30"  # HH:MM format (UTC)
     check_interval_seconds: int = 60
 
+    # Query Configuration
+    queries_dir: str = "queries"
+
     # API Server Configuration
     api_host: str = "0.0.0.0"
     api_port: int = 8080

@@ -31,8 +31,8 @@ from .logger import get_logger
 
 log = get_logger(__name__)
 
-# Path to queries directory
-QUERIES_DIR = Path(__file__).parent.parent.parent / "queries"
+# Queries directory (QUERIES_DIR env var; relative paths resolve against CWD)
+QUERIES_DIR = Path(settings.queries_dir)
 
 
 class QueryDefinition:

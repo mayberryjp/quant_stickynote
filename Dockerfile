@@ -1,7 +1,8 @@
 FROM python:3.12-slim
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONUNBUFFERED=1
+    PYTHONUNBUFFERED=1 \
+    QUERIES_DIR=/app/queries
 
 WORKDIR /app
 
@@ -12,6 +13,7 @@ RUN apt-get update \
 COPY pyproject.toml README.md ./
 COPY src ./src
 COPY alembic ./alembic
+COPY queries ./queries
 COPY alembic.ini supervisord.conf ./
 
 RUN pip install --no-cache-dir --upgrade pip \
